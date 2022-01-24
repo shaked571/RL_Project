@@ -33,7 +33,6 @@ for _ep in range(MAX_EPISODES):
 			new_state = None
 		else:
 			new_state = np.float32(new_observation)
-			# push this exp in ram
 			ram.add(state, action, reward, new_state)
 
 		observation = new_observation
