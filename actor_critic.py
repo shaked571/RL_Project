@@ -1,28 +1,35 @@
 import torch
 import torch.nn.functional as F
-
+from algorithm import Algo
 import utils
 from model import Actor, Critic
+import numpy as np
+import gym
+import buffer
 
 BATCH_SIZE = 128
 LEARNING_RATE = 0.001
 GAMMA = 0.99
 TAU = 0.001
+MAX_BUFFER = 1000000
 
 
-class Trainer:
+class ActorCritic(Algo):
+	MAX_STEPS = 1000
 
-	def __init__(self, state_dim, action_dim, action_lim, ram):
+	def __init__(self, ram, env):
 		"""
-		:param state_dim: Dimensions of state (int)
-		:param action_dim: Dimension of action (int)
-		:param action_lim: Used to limit action in [-action_lim,action_lim]
 		:param ram: replay memory buffer object
-		:return:
 		"""
-		self.state_dim = state_dim
-		self.action_dim = action_dim
-		self.action_lim = action_lim
+		super()._init_(env)
+		self.state_dim = env.observation_space.shape[0]
+		self.action_dim = env.action_space.shape[0]
+		self.action_lim = env.action_space.high[0]
+
+		print(f'State Dimensions: {self.state_dim}')
+		print(f'Action Dimensions: {self.action_dim}')
+		print(f'Action Max: {self.action_lim}')
+
 		self.ram = ram
 		self.iter = 0
 		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim)
@@ -79,7 +86,6 @@ class Trainer:
 		y_expected = r1 + GAMMA*next_val
 		# y_pred = Q( s1, a1)
 		y_predicted = torch.squeeze(self.critic(s1, a1))
-		# compute critic loss, and update the critic
 		loss_critic = F.smooth_l1_loss(y_predicted, y_expected)
 		# loss_critic = torch.nn.SmoothL1Loss(y_predicted, y_expected)
 		self.critic_optimizer.zero_grad()
@@ -95,11 +101,6 @@ class Trainer:
 
 		utils.soft_update(self.target_actor, self.actor, TAU)
 		utils.soft_update(self.target_critic, self.critic, TAU)
-
-		# if self.iter % 100 == 0:
-		# 	print 'Iteration :- ', self.iter, ' Loss_actor :- ', loss_actor.data.numpy(),\
-		# 		' Loss_critic :- ', loss_critic.data.numpy()
-		# self.iter += 1
 
 	def save_models(self, episode_count):
 		"""
@@ -122,3 +123,38 @@ class Trainer:
 		utils.hard_update(self.target_actor, self.actor)
 		utils.hard_update(self.target_critic, self.critic)
 		print('Models loaded succesfully')
+
+	def run_algo_step(self, i):
+		observation = self.env.reset()
+		print(f'EPISODE: {i}')
+		for r in range(self.MAX_STEPS):
+			self.env.render()
+			state = np.float32(observation)
+			action = self.get_exploration_action(state)
+			new_observation, reward, done, info = self.env.step(action)
+
+			if not done:
+				new_state = np.float32(new_observation)
+				self.ram.add(state, action, reward, new_state)
+
+			observation = new_observation
+
+			# perform optimization
+			self.optimize()
+
+			if done:
+				return
+
+		if i % 100 == 0:
+			self.save_models(i)
+
+
+def main():
+	env = gym.make("BipedalWalker-v3")
+	ram = buffer.MemoryBuffer(MAX_BUFFER)
+	algo = ActorCritic(ram, env)
+	algo.run_all_episodes()
+
+
+if __name__ == '__main__':
+	main()

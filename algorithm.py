@@ -4,7 +4,7 @@ import datetime
 
 
 class Algo:
-    EPISODES = 1000
+    EPISODES = 3000
 
     def _init_(self, env):
         self.now_str = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
