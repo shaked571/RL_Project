@@ -129,7 +129,7 @@ class ActorCritic(Algo):
 		print('Models loaded succesfully')
 
 	def run_algo_step(self, i):
-		observation = self.env.reset().to(self.device)
+		observation = self.env.reset()
 		print(f'EPISODE: {i}')
 		total_reward = 0
 
