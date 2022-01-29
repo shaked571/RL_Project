@@ -35,7 +35,7 @@ class Qlearning(Algo):
 
     ALWAYS_DISCRETE_VALUES = {8, 13}
 
-    def _init_(self, env, discrete_size):
+    def __init__(self, env, discrete_size):
         super()._init_(env)
         self.discrete_size = discrete_size
         self.q_table = defaultdict(lambda: np.zeros((discrete_size, discrete_size, discrete_size, discrete_size)))
@@ -43,7 +43,6 @@ class Qlearning(Algo):
         self.action_bin = np.linspace(-1, 1, self.discrete_size)
         self.GAMMA = 0.99
         self.ALPHA = 0.01
-        self.high_score = -200
         self.INF = 1000
         self.epsilon = 0.5
         self.all_states = np.array([0] * 24)

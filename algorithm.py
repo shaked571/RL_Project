@@ -6,7 +6,7 @@ import datetime
 class Algo:
     EPISODES = 3000
 
-    def _init_(self, env):
+    def __init__(self, env):
         self.now_str = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
         self.env = self.wrap_env(env)
 
@@ -20,6 +20,7 @@ class Algo:
         self.sub_plot.set_xlim([0, self.EPISODES])
         self.sub_plot.set_ylim([-220, 100])
         self.DEBUG = False
+        self.high_score = -200
 
     def run_all_episodes(self):
         for i in range(1, self.EPISODES + 1):

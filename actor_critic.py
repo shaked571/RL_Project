@@ -11,7 +11,7 @@ BATCH_SIZE = 128
 LEARNING_RATE = 0.001
 GAMMA = 0.99
 TAU = 0.001
-MAX_BUFFER = 1000000
+REPLAY_BUFFER = 1000000
 
 
 class ActorCritic(Algo):
@@ -21,7 +21,7 @@ class ActorCritic(Algo):
 		"""
 		:param ram: replay memory buffer object
 		"""
-		super()._init_(env)
+		super().__init__(env)
 		self.state_dim = env.observation_space.shape[0]
 		self.action_dim = env.action_space.shape[0]
 		self.action_lim = env.action_space.high[0]
@@ -64,6 +64,7 @@ class ActorCritic(Algo):
 		state = torch.from_numpy(state)
 		action = self.actor(state).detach()
 		new_action = action.data.numpy() + (self.noise.sample() * self.action_lim)
+		a = action.data.numpy()
 		return new_action
 
 	def optimize(self):
@@ -127,11 +128,14 @@ class ActorCritic(Algo):
 	def run_algo_step(self, i):
 		observation = self.env.reset()
 		print(f'EPISODE: {i}')
-		for r in range(self.MAX_STEPS):
+		total_reward = 0
+
+		while True:
 			self.env.render()
 			state = np.float32(observation)
 			action = self.get_exploration_action(state)
 			new_observation, reward, done, info = self.env.step(action)
+			total_reward += reward
 
 			if not done:
 				new_state = np.float32(new_observation)
@@ -143,15 +147,19 @@ class ActorCritic(Algo):
 			self.optimize()
 
 			if done:
-				return
+				break
 
 		if i % 100 == 0:
 			self.save_models(i)
 
+		if total_reward > self.high_score:
+			self.high_score = total_reward
+		return total_reward
+
 
 def main():
 	env = gym.make("BipedalWalker-v3")
-	ram = buffer.MemoryBuffer(MAX_BUFFER)
+	ram = buffer.MemoryBuffer(REPLAY_BUFFER)
 	algo = ActorCritic(ram, env)
 	algo.run_all_episodes()
 
