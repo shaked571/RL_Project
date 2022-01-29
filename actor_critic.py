@@ -20,7 +20,7 @@ MAX_REPLAY_BUFFER = 1000000
 class ActorCritic(Algo):
 	MAX_STEPS = 1000
 
-	def __init__(self, replay_buffer, env):
+	def __init__(self, replay_buffer, env, device):
 		"""
 		:param replay_buffer: replay memory buffer object
 		"""
@@ -37,12 +37,12 @@ class ActorCritic(Algo):
 		self.iter = 0
 		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim)
 
-		self.actor = Actor(self.state_dim, self.action_dim, self.action_lim)
-		self.target_actor = Actor(self.state_dim, self.action_dim, self.action_lim)
+		self.actor = Actor(self.state_dim, self.action_dim, self.action_lim).to(device)
+		self.target_actor = Actor(self.state_dim, self.action_dim, self.action_lim).to(device)
 		self.actor_optimizer = torch.optim.AdamW(self.actor.parameters(), LEARNING_RATE)
 
-		self.critic = Critic(self.state_dim, self.action_dim)
-		self.target_critic = Critic(self.state_dim, self.action_dim)
+		self.critic = Critic(self.state_dim, self.action_dim).to(device)
+		self.target_critic = Critic(self.state_dim, self.action_dim).to(device)
 		self.critic_optimizer = torch.optim.AdamW(self.critic.parameters(), LEARNING_RATE)
 
 		utils.hard_update(self.target_actor, self.actor)
@@ -165,8 +165,9 @@ class ActorCritic(Algo):
 
 
 def main():
+	device = "cuda" if torch.cuda.is_available() else "cpu"
 	env = gym.make("BipedalWalker-v3")
-	ram = ReplayBuffer(MAX_REPLAY_BUFFER)
+	ram = ReplayBuffer(MAX_REPLAY_BUFFER, device)
 	algo = ActorCritic(ram, env)
 	algo.run_all_episodes()
 

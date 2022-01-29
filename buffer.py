@@ -6,9 +6,10 @@ from collections import deque
 
 class ReplayBuffer:
 
-	def __init__(self, size):
+	def __init__(self, size, device):
 		self.buffer = deque(maxlen=size)
 		self.maxSize = size
+		self.device = device
 		self.len = 0
 
 	def sample(self, count):
@@ -20,10 +21,10 @@ class ReplayBuffer:
 		count = min(count, self.len)
 		batch = random.sample(self.buffer, count)
 
-		s_arr = torch.tensor(np.float32([arr[0] for arr in batch]))
-		a_arr = torch.tensor(np.float32([arr[1] for arr in batch]))
-		r_arr = torch.tensor(np.float32([arr[2] for arr in batch]))
-		s1_arr = torch.tensor(np.float32([arr[3] for arr in batch]))
+		s_arr = torch.tensor(np.float32([arr[0] for arr in batch])).to(self.device)
+		a_arr = torch.tensor(np.float32([arr[1] for arr in batch])).to(self.device)
+		r_arr = torch.tensor(np.float32([arr[2] for arr in batch])).to(self.device)
+		s1_arr = torch.tensor(np.float32([arr[3] for arr in batch])).to(self.device)
 
 		return s_arr, a_arr, r_arr, s1_arr
 
