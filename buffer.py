@@ -4,7 +4,7 @@ import torch
 from collections import deque
 
 
-class MemoryBuffer:
+class ReplayBuffer:
 
 	def __init__(self, size):
 		self.buffer = deque(maxlen=size)

@@ -7,7 +7,7 @@ import utils
 from model import Actor, Critic
 import numpy as np
 import gym
-import buffer
+from buffer import ReplayBuffer
 torch.manual_seed(0)
 
 BATCH_SIZE = 128
@@ -20,9 +20,9 @@ MAX_REPLAY_BUFFER = 1000000
 class ActorCritic(Algo):
 	MAX_STEPS = 1000
 
-	def __init__(self, ram, env):
+	def __init__(self, replay_buffer, env):
 		"""
-		:param ram: replay memory buffer object
+		:param replay_buffer: replay memory buffer object
 		"""
 		super().__init__(env)
 		self.state_dim = env.observation_space.shape[0]
@@ -33,7 +33,7 @@ class ActorCritic(Algo):
 		print(f'Action Dimensions: {self.action_dim}')
 		print(f'Action Max: {self.action_lim}')
 
-		self.ram = ram
+		self.ram = replay_buffer
 		self.iter = 0
 		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim)
 
@@ -166,7 +166,7 @@ class ActorCritic(Algo):
 
 def main():
 	env = gym.make("BipedalWalker-v3")
-	ram = buffer.MemoryBuffer(MAX_REPLAY_BUFFER)
+	ram = ReplayBuffer(MAX_REPLAY_BUFFER)
 	algo = ActorCritic(ram, env)
 	algo.run_all_episodes()
 
