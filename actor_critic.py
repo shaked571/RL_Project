@@ -4,13 +4,13 @@ import torch
 import torch.nn.functional as F
 from algorithm import Algo
 import utils
-from model import Actor, Critic
+from models import Actor, Critic
 import numpy as np
 import gym
 from buffer import ReplayBuffer
 torch.manual_seed(0)
 
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 GAMMA = 0.99
 TAU = 0.001
@@ -18,7 +18,6 @@ MAX_REPLAY_BUFFER = 1000000
 
 
 class ActorCritic(Algo):
-	MAX_STEPS = 1000
 
 	def __init__(self, replay_buffer, env, device):
 		"""
@@ -164,7 +163,7 @@ def main():
 	device = "cuda" if torch.cuda.is_available() else "cpu"
 	env = gym.make("BipedalWalker-v3")
 	ram = ReplayBuffer(MAX_REPLAY_BUFFER, device)
-	algo = ActorCritic(ram, env)
+	algo = ActorCritic(ram, env, device)
 	algo.run_all_episodes()
 
 
