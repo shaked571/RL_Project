@@ -66,8 +66,11 @@ class ActorCritic(Algo):
 		:return: sampled action (Numpy array)
 		"""
 		state = torch.from_numpy(state)
+		print("hi")
 		action = self.actor(state).detach()
+		print("hi1")
 		new_action = action.data.numpy() + (self.noise.sample() * self.action_lim)
+		print("hi2")
 		return new_action.to(self.device)
 
 	def optimize(self):
