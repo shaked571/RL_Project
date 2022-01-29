@@ -67,7 +67,6 @@ class ActorCritic(Algo):
 		state = torch.from_numpy(state)
 		action = self.actor(state).detach()
 		new_action = action.data.numpy() + (self.noise.sample() * self.action_lim)
-		a = action.data.numpy()
 		return new_action
 
 	def optimize(self):
@@ -76,11 +75,6 @@ class ActorCritic(Algo):
 		:return:
 		"""
 		s1, a1, r1, s2 = self.ram.sample(BATCH_SIZE)
-
-		# s1 = torch.from_numpy(s1)
-		# a1 = torch.from_numpy(a1)
-		# r1 = torch.from_numpy(r1)
-		# s2 = torch.from_numpy(s2)
 
 		# ---------------------- optimize critic ----------------------
 		# Use target actor exploitation policy here for loss evaluation
