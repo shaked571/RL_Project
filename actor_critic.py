@@ -14,7 +14,7 @@ BATCH_SIZE = 128
 LEARNING_RATE = 0.001
 GAMMA = 0.99
 TAU = 0.001
-REPLAY_BUFFER = 1000000
+MAX_REPLAY_BUFFER = 1000000
 
 
 class ActorCritic(Algo):
@@ -166,7 +166,7 @@ class ActorCritic(Algo):
 
 def main():
 	env = gym.make("BipedalWalker-v3")
-	ram = buffer.MemoryBuffer(REPLAY_BUFFER)
+	ram = buffer.MemoryBuffer(MAX_REPLAY_BUFFER)
 	algo = ActorCritic(ram, env)
 	algo.run_all_episodes()
 

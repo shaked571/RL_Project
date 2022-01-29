@@ -22,8 +22,6 @@ class Algo:
         self.DEBUG = False
         self.high_score = -200
 
-
-
     def run_all_episodes(self):
         for i in range(1, self.EPISODES + 1):
             ep_score = self.run_algo_step(i)
