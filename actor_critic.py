@@ -65,7 +65,7 @@ class ActorCritic(Algo):
 		:param state: state (Numpy array)
 		:return: sampled action (Numpy array)
 		"""
-		state = torch.from_numpy(state)
+		state = torch.from_numpy(state).to(self.device)
 		print("hi")
 		action = self.actor(state).detach()
 		print("hi1")
