@@ -66,11 +66,8 @@ class ActorCritic(Algo):
 		:return: sampled action (Numpy array)
 		"""
 		state = torch.from_numpy(state).to(self.device)
-		print("hi")
 		action = self.actor(state).detach()
-		print("hi1")
 		new_action = action.data.cpu().numpy() + (self.noise.sample() * self.action_lim)
-		print("hi2")
 		return new_action
 
 	def optimize(self):
@@ -138,13 +135,9 @@ class ActorCritic(Algo):
 
 		while True:
 			self.env.render()
-			print("here")
 			state = np.float32(observation)
-			print("here1")
 			action = self.get_exploration_action(state)
-			print("here2")
 			new_observation, reward, done, info = self.env.step(action)
-			print("here3")
 			total_reward += reward
 
 			if not done:
