@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import shutil
-from gym.wrappers import Monitor
 
 
 def soft_update(target, source, tau):
@@ -43,11 +42,7 @@ def save_training_checkpoint(state, is_best, episode_count):
 		shutil.copyfile(filename, 'model_best.pth.tar')
 
 
-# def wrap_env(curr_env):
-# 	curr_env = Monitor(curr_env, './video', force=True, video_callable=False)
-# 	return curr_env
-
-
+# noise is according the original paper: https://arxiv.org/pdf/1509.02971.pdf
 # Based on http://math.stackexchange.com/questions/1287634/implementing-ornstein-uhlenbeck-in-matlab
 class OrnsteinUhlenbeckActionNoise:
 
@@ -58,7 +53,7 @@ class OrnsteinUhlenbeckActionNoise:
 		self.sigma = sigma
 		self.X = np.ones(self.action_dim) * self.mu
 
-	def reset(self):
+	def reset_(self):
 		self.X = np.ones(self.action_dim) * self.mu
 
 	def sample(self):
