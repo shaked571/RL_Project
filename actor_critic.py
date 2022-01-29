@@ -33,7 +33,8 @@ class ActorCritic(Algo):
 		print(f'Action Dimensions: {self.action_dim}')
 		print(f'Action Max: {self.action_lim}')
 
-		self.ram = replay_buffer
+		self.device = device
+		self.replay_buffer = replay_buffer
 		self.iter = 0
 		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim)
 
@@ -56,7 +57,7 @@ class ActorCritic(Algo):
 		"""
 		state = torch.from_numpy(state)
 		action = self.target_actor(state).detach()
-		return action.data.numpy()
+		return action.data.numpy().to(self.device)
 
 	def get_exploration_action(self, state):
 		"""
@@ -67,14 +68,14 @@ class ActorCritic(Algo):
 		state = torch.from_numpy(state)
 		action = self.actor(state).detach()
 		new_action = action.data.numpy() + (self.noise.sample() * self.action_lim)
-		return new_action
+		return new_action.to(self.device)
 
 	def optimize(self):
 		"""
 		Samples a random batch from replay memory and performs optimization
 		:return:
 		"""
-		s1, a1, r1, s2 = self.ram.sample(BATCH_SIZE)
+		s1, a1, r1, s2 = self.replay_buffer.sample(BATCH_SIZE)
 
 		# ---------------------- optimize critic ----------------------
 		# Use target actor exploitation policy here for loss evaluation
@@ -140,7 +141,7 @@ class ActorCritic(Algo):
 
 			if not done:
 				new_state = np.float32(new_observation)
-				self.ram.add(state, action, reward, new_state)
+				self.replay_buffer.add(state, action, reward, new_state)
 
 			observation = new_observation
 
