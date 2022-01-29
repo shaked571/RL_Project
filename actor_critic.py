@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn.functional as F
 from algorithm import Algo
@@ -6,6 +8,7 @@ from model import Actor, Critic
 import numpy as np
 import gym
 import buffer
+torch.manual_seed(0)
 
 BATCH_SIZE = 128
 LEARNING_RATE = 0.001
@@ -109,9 +112,13 @@ class ActorCritic(Algo):
 		:param episode_count: the count of episodes iterated
 		:return:
 		"""
-		torch.save(self.target_actor.state_dict(), 'Models/' + str(episode_count) + '_actor.pt')
-		torch.save(self.target_critic.state_dict(), 'Models/' + str(episode_count) + '_critic.pt')
-		print('Models saved successfully')
+		isExist = os.path.exists("Models")
+		if not isExist:
+			os.mkdir("Models")
+		if not os.path.isdir(f"Models/{self.now_str}"):
+			torch.save(self.target_actor.state_dict(), 'Models/' + str(episode_count) + '_actor.pt')
+			torch.save(self.target_critic.state_dict(), 'Models/' + str(episode_count) + '_critic.pt')
+			print('Models saved successfully')
 
 	def load_models(self, episode):
 		"""
