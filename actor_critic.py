@@ -69,7 +69,7 @@ class ActorCritic(Algo):
 		print("hi")
 		action = self.actor(state).detach()
 		print("hi1")
-		new_action = action.data.numpy() + (self.noise.sample() * self.action_lim).to(self.device)
+		new_action = action.data.cpu().numpy() + (self.noise.sample() * self.action_lim)
 		print("hi2")
 		return new_action
 
