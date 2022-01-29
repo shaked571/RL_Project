@@ -135,9 +135,13 @@ class ActorCritic(Algo):
 
 		while True:
 			self.env.render()
+			print("here")
 			state = np.float32(observation)
+			print("here1")
 			action = self.get_exploration_action(state)
+			print("here2")
 			new_observation, reward, done, info = self.env.step(action)
+			print("here3")
 			total_reward += reward
 
 			if not done:
