@@ -8,10 +8,10 @@ from models import Actor, Critic
 import numpy as np
 import gym
 from buffer import ReplayBuffer
-torch.manual_seed(0)
-
+torch.manual_seed(42)
+from torch.optim.lr_scheduler import LambdaLR
 BATCH_SIZE = 64
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0015
 GAMMA = 0.99
 TAU = 0.001
 MAX_REPLAY_BUFFER = 1000000
@@ -44,9 +44,16 @@ class ActorCritic(Algo):
 		self.critic = Critic(self.state_dim, self.action_dim).to(device)
 		self.target_critic = Critic(self.state_dim, self.action_dim).to(device)
 		self.critic_optimizer = torch.optim.AdamW(self.critic.parameters(), LEARNING_RATE)
+		lambda1 = lambda epoch: 0.998 ** epoch
 
+		self.critic_lr_scheduler = LambdaLR(self.critic_optimizer, lambda1)
+		self.actor_lr_scheduler = LambdaLR(self.actor_optimizer, lambda1)
 		utils.hard_update(self.target_actor, self.actor)
 		utils.hard_update(self.target_critic, self.critic)
+		self.actor_loss = []
+		self.critic_loss = []
+		self.actor_lr = []
+		self.critic_lr = []
 
 	def get_exploitation_action(self, state):
 		"""
@@ -80,13 +87,10 @@ class ActorCritic(Algo):
 		# Use target actor exploitation policy here for loss evaluation
 		a2 = self.target_actor(s2).detach()
 		next_val = torch.squeeze(self.target_critic(s2, a2).detach())
-		# y_exp = r + gamma*Q'( s2, pi'(s2))
 		y_expected = r1 + GAMMA*next_val
 		y_expected = y_expected.to(self.device)
-		# y_pred = Q( s1, a1)
 		y_predicted = torch.squeeze(self.critic(s1, a1)).to(self.device)
 		loss_critic = F.smooth_l1_loss(y_predicted, y_expected)
-		# loss_critic = torch.nn.SmoothL1Loss(y_predicted, y_expected)
 		self.critic_optimizer.zero_grad()
 		loss_critic.backward()
 		self.critic_optimizer.step()
@@ -132,7 +136,7 @@ class ActorCritic(Algo):
 		print(f'EPISODE: {i}')
 		total_reward = 0
 
-		while True:
+		for _ in range(self.max_steps):
 			self.env.render()
 			state = np.float32(observation)
 			action = self.get_exploration_action(state)
@@ -153,10 +157,17 @@ class ActorCritic(Algo):
 
 		if i % 100 == 0:
 			self.save_models(i)
+		self.actor_lr_scheduler.step()
+		self.critic_lr_scheduler.step()
 
 		if total_reward > self.high_score:
 			self.high_score = total_reward
 		return total_reward
+
+	def plot_episode(self, ep_score, i, **kwargs):
+		super(ActorCritic, self).plot_episode(ep_score, i)
+		print(f"actor lr: {self.actor_optimizer.param_groups[0]['lr']}")
+		print(f"critic lr: {self.critic_optimizer.param_groups[0]['lr']}")
 
 
 def main():

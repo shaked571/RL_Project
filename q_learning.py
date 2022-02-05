@@ -82,6 +82,8 @@ class Qlearning(Algo):
                 break
         if total_reward > self.high_score:
             self.high_score = total_reward
+            print(f"Algo step number {i} got best score: {self.high_score}")
+
         self.epsilon_decay()
         return total_reward
 
