@@ -91,14 +91,14 @@ class ActorCritic(Algo):
 		y_expected = r1 + GAMMA*next_val
 		y_expected = y_expected.to(self.device)
 		y_predicted = torch.squeeze(self.critic(s1, a1)).to(self.device)
-		loss_critic = F.smooth_l1_loss(y_predicted, y_expected)
+		loss_critic = F.mse_loss(y_predicted, y_expected)
 		self.critic_optimizer.zero_grad()
 		loss_critic.backward()
 		self.critic_optimizer.step()
 
 		# ---------------------- optimize actor ----------------------
-		pred_a1 = self.actor.forward(s1).to(self.device)
-		loss_actor = -1 * torch.sum(self.critic(s1, pred_a1))
+		pred_a1 = self.actor(s1).to(self.device)
+		loss_actor = -self.critic(s1, pred_a1).mean()
 		self.actor_optimizer.zero_grad()
 		loss_actor.backward()
 		self.actor_optimizer.step()

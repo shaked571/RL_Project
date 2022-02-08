@@ -7,7 +7,7 @@ class Algo:
     EPISODES = 3000
 
     def __init__(self, env):
-        self.max_steps = 2500
+        self.max_steps = 1600
         self.now_str = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
         env._max_episode_steps = self.max_steps
         self.env = self.wrap_env(env)
