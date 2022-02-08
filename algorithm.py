@@ -7,7 +7,7 @@ class Algo:
     EPISODES = 3000
 
     def __init__(self, env):
-        self.max_steps = 1000
+        self.max_steps = 2500
         self.now_str = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
         env._max_episode_steps = self.max_steps
         self.env = self.wrap_env(env)
@@ -35,6 +35,8 @@ class Algo:
         self.yval.append(ep_score)
         self.plot_line.set_xdata(self.xval)
         self.plot_line.set_ydata(self.yval)
+        moving_avg = pd.Series(self.yval, index=self.xval).rolling(100, min_periods=1).mean()
+        self.sub_plot.plot(self.xval, moving_avg, "--k")
         self.score_graph.savefig(f"./plots/{self.now_str}/score_graph.png")
 
     def wrap_env(self, env):

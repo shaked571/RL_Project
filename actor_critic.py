@@ -44,10 +44,10 @@ class ActorCritic(Algo):
 		self.critic = Critic(self.state_dim, self.action_dim).to(device)
 		self.target_critic = Critic(self.state_dim, self.action_dim).to(device)
 		self.critic_optimizer = torch.optim.AdamW(self.critic.parameters(), LEARNING_RATE)
-		lambda1 = lambda epoch: 0.998 ** epoch
-
-		self.critic_lr_scheduler = LambdaLR(self.critic_optimizer, lambda1)
-		self.actor_lr_scheduler = LambdaLR(self.actor_optimizer, lambda1)
+		# lambda1 = lambda epoch: 0.998 ** epoch
+		#
+		# self.critic_lr_scheduler = LambdaLR(self.critic_optimizer, lambda1)
+		# self.actor_lr_scheduler = LambdaLR(self.actor_optimizer, lambda1)
 		utils.hard_update(self.target_actor, self.actor)
 		utils.hard_update(self.target_critic, self.critic)
 		self.actor_loss = []
@@ -157,8 +157,8 @@ class ActorCritic(Algo):
 
 		if i % 100 == 0:
 			self.save_models(i)
-		self.actor_lr_scheduler.step()
-		self.critic_lr_scheduler.step()
+		# self.actor_lr_scheduler.step()
+		# self.critic_lr_scheduler.step()
 
 		if total_reward > self.high_score:
 			self.high_score = total_reward
