@@ -20,14 +20,16 @@ class Critic(nn.Module):
 
 		self.fca1 = nn.Linear(action_dim, 128)
 		self.fc2 = nn.Linear(256, 128)
-		self.fc3 = nn.Linear(128, 1)
-		self.leaky_relu = nn.LeakyReLU(0.15)
+		self.fc3 = nn.Linear(128, 32)
+		self.fc4 = nn.Linear(32, 1)
+		self.leaky_relu = nn.LeakyReLU(0.1)
 
 		nn.init.xavier_uniform_(self.fcs1.weight)
 		nn.init.xavier_uniform_(self.fcs2.weight)
 		nn.init.xavier_uniform_(self.fca1.weight)
 		nn.init.xavier_uniform_(self.fc2.weight)
 		nn.init.xavier_uniform_(self.fc3.weight)
+		nn.init.xavier_uniform_(self.fc4.weight)
 
 	def forward(self, state, action):
 		"""
@@ -39,11 +41,11 @@ class Critic(nn.Module):
 		s1 = self.leaky_relu(self.fcs1(state))
 		s2 = self.leaky_relu(self.fcs2(s1))
 		a1 = self.leaky_relu(self.fca1(action))
-		torch.cat((s2, a1))
 		x = torch.cat((s2, a1), dim=1)
 
 		x = self.leaky_relu(self.fc2(x))
-		x = self.fc3(x)
+		x = self.leaky_relu(self.fc3(x))
+		x = self.fc4(x)
 
 		return x
 

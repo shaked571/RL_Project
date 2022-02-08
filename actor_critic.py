@@ -11,10 +11,10 @@ from buffer import ReplayBuffer
 torch.manual_seed(42)
 from torch.optim.lr_scheduler import LambdaLR
 BATCH_SIZE = 64
-LEARNING_RATE = 0.0015
+LEARNING_RATE = 0.0012
 GAMMA = 0.99
 TAU = 0.001
-MAX_REPLAY_BUFFER = 1000000
+MAX_REPLAY_BUFFER = 10000000
 
 
 class ActorCritic(Algo):
