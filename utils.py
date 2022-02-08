@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import shutil
-
+np.random.seed(0)
 
 def soft_update(target, source, tau):
 	"""
