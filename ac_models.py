@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from utils import OrnsteinUhlenbeckActionNoise
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('device: ', device)
 
@@ -91,26 +91,28 @@ class ReplayBuffer(object):
 
         return np.array(x), np.array(y), np.array(u), np.array(r).reshape(-1, 1), np.array(d).reshape(-1, 1)
 
-
+LEARNING_RATE = 0.0012
 class ActorCritic(object):
     def __init__(self, state_dim, action_dim, max_action):
         self.actor = Actor(state_dim, action_dim, max_action).to(device)
         self.actor_target = Actor(state_dim, action_dim, max_action).to(device)
         self.actor_target.load_state_dict(self.actor.state_dict())
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), LEARNING_RATE)
 
         self.critic = Critic(state_dim, action_dim).to(device)
         self.critic_target = Critic(state_dim, action_dim).to(device)
         self.critic_target.load_state_dict(self.critic.state_dict())
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), LEARNING_RATE)
 
         self.max_action = max_action
+        self.noise = OrnsteinUhlenbeckActionNoise(action_dim)
 
     def select_action(self, state):
         state = torch.FloatTensor(state.reshape(1, -1)).to(device)
         return self.actor(state).cpu().data.numpy().flatten()
 
-    def train(self, replay_buffer, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2):
+    # def train(self, replay_buffer, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5):
+    def train(self, replay_buffer, iterations, batch_size=64, discount=0.99, tau=0.001, policy_noise=0.2, noise_clip=0.5):
 
         for it in range(iterations):
 
@@ -124,14 +126,18 @@ class ActorCritic(object):
 
             # Select action according to policy
             noise = torch.FloatTensor(u).data.normal_(0, policy_noise).to(device)
-            # noise = noise.clamp(-noise_clip, noise_clip)
+            noise = noise.clamp(-noise_clip, noise_clip)
+            # try:
+                # next_action = (self.actor_target(next_state) + self.noise.sample()).clamp(-self.max_action, self.max_action)
             next_action = (self.actor_target(next_state) + noise).clamp(-self.max_action, self.max_action)
+            # except Exception as error:
+            #     print()
             # next_action = self.actor_target(next_state).clamp(-self.max_action, self.max_action)
 
             # Compute the target Q value
             target_Q = self.critic_target(next_state, next_action)
-            # target_Q = torch.min(target_Q1, target_Q2)
-            target_Q = reward + (done * discount * target_Q).detach()
+            target_Q = reward + (discount * target_Q).detach()
+            # target_Q = reward + (done * discount * target_Q).detach()
 
             # Get current Q estimates
             current_Q = self.critic(state, action)
