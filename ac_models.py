@@ -97,6 +97,7 @@ class ActorCritic(object):
         self.actor = Actor(state_dim, action_dim, max_action).to(device)
         self.actor_target = Actor(state_dim, action_dim, max_action).to(device)
         self.actor_target.load_state_dict(self.actor.state_dict())
+        # The learning rate was added
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), LEARNING_RATE)
 
         self.critic = Critic(state_dim, action_dim).to(device)
