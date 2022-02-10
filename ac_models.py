@@ -48,10 +48,6 @@ class Critic(nn.Module):
         x1 = F.relu(self.l1(xu))
         x1 = F.relu(self.l2(x1))
         x1 = self.l3(x1)
-
-        x2 = F.relu(self.l4(xu))
-        x2 = F.relu(self.l5(x2))
-        x2 = self.l6(x2)
         return x1
 
     def Q1(self, x, u):
