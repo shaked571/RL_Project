@@ -60,7 +60,9 @@ class OrnsteinUhlenbeckActionNoise:
 		dx = self.theta * (self.mu - self.X)
 		dx = dx + self.sigma * np.random.randn(len(self.X))
 		self.X = self.X + dx
-		return self.X
+		# return self.X
+		# Added for new actor critic
+		return torch.from_numpy(self.X)
 
 
 # use this to plot Ornstein Uhlenbeck random motion
