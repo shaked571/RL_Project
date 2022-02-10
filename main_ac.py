@@ -165,4 +165,4 @@ def main(agent_type):
 
     play(env=env, agent=agent, n_episodes=7)
 
-main()
+# main()
