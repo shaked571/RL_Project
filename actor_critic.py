@@ -173,7 +173,7 @@ class ActorCritic(Algo):
 
 def main():
 	device = "cuda" if torch.cuda.is_available() else "cpu"
-	env = gym.make("BipedalWalker-v3")
+	env = gym.make("MountainCarContinuous-v0")
 	ram = ReplayBuffer(MAX_REPLAY_BUFFER, device)
 	algo = ActorCritic(ram, env, device)
 	algo.run_all_episodes()
