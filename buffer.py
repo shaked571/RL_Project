@@ -12,33 +12,32 @@ class ReplayBuffer:
 		self.device = device
 		self.len = 0
 
-	def sample(self, count):
+	def sample(self, batch_size):
 		"""
 		samples a random batch from the replay memory buffer
-		:param count: batch size
+		:param batch_size: batch size
 		:return: batch (numpy array)
 		"""
-		count = min(count, self.len)
-		batch = random.sample(self.buffer, count)
+		batch_size = min(batch_size, self.len)
+		batch = random.sample(self.buffer, batch_size)
 
-		s_arr = torch.tensor(np.float32([arr[0] for arr in batch])).to(self.device)
-		a_arr = torch.tensor(np.float32([arr[1] for arr in batch])).to(self.device)
-		r_arr = torch.tensor(np.float32([arr[2] for arr in batch])).to(self.device)
-		s1_arr = torch.tensor(np.float32([arr[3] for arr in batch])).to(self.device)
+		cur_state = torch.tensor(np.float32([arr[0] for arr in batch])).to(self.device)
+		action = torch.tensor(np.float32([arr[1] for arr in batch])).to(self.device)
+		reward = torch.tensor(np.float32([arr[2] for arr in batch])).to(self.device)
+		next_state = torch.tensor(np.float32([arr[3] for arr in batch])).to(self.device)
 
-		return s_arr, a_arr, r_arr, s1_arr
+		return cur_state, action, reward, next_state
 
-	def add(self, s, a, r, s1):
+	def add(self, cur_state, action, reward, next_state):
 		"""
 		adds a particular transaction in the memory buffer
-		:param s: current state
-		:param a: action taken
-		:param r: reward received
-		:param s1: next state
+		:param cur_state: current state
+		:param action: action taken
+		:param reward: reward received
+		:param next_state: next state
 		:return:
 		"""
-		transition = (s, a, r, s1)
 		self.len += 1
 		if self.len > self.maxSize:
 			self.len = self.maxSize
-		self.buffer.append(transition)
+		self.buffer.append((cur_state, action, reward, next_state))

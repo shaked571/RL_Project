@@ -39,6 +39,7 @@ class ActorCritic(Algo):
 		self.iter = 0
 		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim)
 
+		self.noise_clamp = self.action_lim
 		self.actor = Actor(self.state_dim, self.action_dim, self.action_lim).to(device)
 		self.target_actor = Actor(self.state_dim, self.action_dim, self.action_lim).to(device)
 		self.actor_optimizer = torch.optim.AdamW(self.actor.parameters(), LEARNING_RATE)
@@ -75,7 +76,14 @@ class ActorCritic(Algo):
 		"""
 		state = torch.from_numpy(state).to(self.device)
 		action = self.actor(state).detach()
-		new_action = action.data.cpu() + (self.noise.sample() * self.action_lim)
+		noise = self.noise.sample() * self.action_lim
+		noise = noise.clamp(-self.action_lim, self.action_lim)
+		print(f"noise: {noise}")
+		new_action = action.data.cpu() + noise
+		print(f"new_action: {action}")
+		print(f"new with noise : {new_action}")
+		new_action = new_action.clamp(-self.action_lim, self.action_lim)
+		print(f"new_action_clamp: {new_action}")
 		return new_action.numpy()
 
 	def optimize(self):
