@@ -6,8 +6,8 @@ import pandas as pd
 class Algo:
     EPISODES = 3000
 
-    def __init__(self, env):
-        self.max_steps = 1600
+    def __init__(self, env, name):
+        self.max_steps = 1000
         self.max_steps = env._max_episode_steps
         self.now_str = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
         env._max_episode_steps = self.max_steps
@@ -20,10 +20,11 @@ class Algo:
         plt.title("Scores vs Episode")
         self.plot_line, = self.sub_plot.plot(self.xval, self.yval)
         self.sub_plot.set_xlim([0, self.EPISODES])
-        self.sub_plot.set_ylim([-220, 400])
+        self.sub_plot.set_ylim([-220, 240])
         self.x_label_title = "Episode #"
         self.DEBUG = False
         self.high_score = -200
+        self.name = name
 
     def run_all_episodes(self):
         for i in range(1, self.EPISODES + 1):
@@ -40,10 +41,10 @@ class Algo:
         print(f"current avg over last 100: {moving_avg.iloc[len(moving_avg) - 1]}")
         self.sub_plot.plot(self.xval, moving_avg, "--k")
 
-        self.score_graph.savefig(f"./plots/{self.now_str}/score_graph.png")
+        self.score_graph.savefig(f"./plots/{self.name}/{self.now_str}/score_graph.png")
 
     def wrap_env(self, env):
-        env = Monitor(env, f'./plots/{self.now_str}/video', video_callable=lambda episode_id: episode_id % 50 == 0,
+        env = Monitor(env, f'./plots/{self.name}/{self.now_str}/video', video_callable=lambda episode_id: episode_id % 50 == 0,
                       force=True)
         return env
 

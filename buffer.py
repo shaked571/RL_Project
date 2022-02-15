@@ -6,11 +6,12 @@ from collections import deque
 
 class ReplayBuffer:
 
-	def __init__(self, size, device):
+	def __init__(self, size, device, rng):
 		self.buffer = deque(maxlen=size)
 		self.maxSize = size
 		self.device = device
 		self.len = 0
+		self.rng = rng
 
 	def sample(self, batch_size):
 		"""
@@ -19,12 +20,11 @@ class ReplayBuffer:
 		:return: batch (numpy array)
 		"""
 		batch_size = min(batch_size, self.len)
-		batch = random.sample(self.buffer, batch_size)
-
-		cur_state = torch.tensor(np.float32([arr[0] for arr in batch])).to(self.device)
-		action = torch.tensor(np.float32([arr[1] for arr in batch])).to(self.device)
-		reward = torch.tensor(np.float32([arr[2] for arr in batch])).to(self.device)
-		next_state = torch.tensor(np.float32([arr[3] for arr in batch])).to(self.device)
+		indices = self.rng.integers(low=0, high=len(self.buffer), size=batch_size)
+		cur_state = torch.tensor(np.float32([self.buffer[i][0] for i in indices])).to(self.device)
+		action = torch.tensor(np.float32([self.buffer[i][1] for i in indices])).to(self.device)
+		reward = torch.tensor(np.float32([self.buffer[i][2] for i in indices])).to(self.device)
+		next_state = torch.tensor(np.float32([self.buffer[i][3] for i in indices])).to(self.device)
 
 		return cur_state, action, reward, next_state
 
