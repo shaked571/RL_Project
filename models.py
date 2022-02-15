@@ -134,7 +134,7 @@ class DQNModel(nn.Module):
 		x = self.leaky_relu(self.fc1(state))
 		x = self.leaky_relu(self.fc2(x))
 		x = self.leaky_relu(self.fc3(x))
-		action = torch.tanh(self.fc4(x))
+		action = self.fc4(x)
 
 		return action
 

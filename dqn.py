@@ -13,7 +13,7 @@ MAX_REPLAY_BUFFER = 100000
 
 class DQN(Algo):
 
-    def __init__(self,   env, action_space: dict, buffer, device, noise, apply_noise, discount_factor=0.99, update_rate=100, batch_size=64,
+    def __init__(self,   env, action_space: dict, buffer, device, noise, apply_noise, discount_factor=0.99, update_rate=50, batch_size=64,
                  lr=0.001, epsilon=1, eps_end=0.01, eps_dec=5e-4, max_steps=1000):
         super().__init__(env, 'dqn')
         self.epsilon = epsilon
@@ -118,7 +118,7 @@ def main():
     noise = OrnsteinUhlenbeckActionNoise(action_dim=1, rng=rng, theta=0.005, sigma=0.005)
     buffer = ReplayBuffer(MAX_REPLAY_BUFFER, device, rng)
 
-    algo = DQN(env, action_space, buffer, device, noise, apply_noise=True)
+    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False)
     algo.run_all_episodes()
 
 
