@@ -1,27 +1,14 @@
+from collections import deque
+import os
 import numpy as np
 import torch
 import gym
 import time
 from td3_models import ReplayBuffer, TD3
-
+from collections import deque
 start_timestep=1e4
+import random
 
-std_noise=0.1
-
-env = gym.make('BipedalWalker-v3')
-
-# Set seeds
-seed = 88
-env.seed(seed)
-torch.manual_seed(seed)
-np.random.seed(seed)
-
-state = env.reset()
-state_dim = env.observation_space.shape[0]
-action_dim = env.action_space.shape[0]
-max_action = float(env.action_space.high[0])
-
-agent = TD3(state_dim, action_dim, max_action)
 # save(agent = agent, filename='checkpnt, directory = 'dir_chkpoint')
 def save(agent, filename, directory):
     torch.save(agent.actor.state_dict(), '%s/%s_actor.pth' % (directory, filename))
@@ -31,13 +18,13 @@ def save(agent, filename, directory):
 
 
 # Twin Delayed Deep Deterministic (TD3) policy gradient algorithm
-def twin_ddd_train(n_episodes=2000, save_every=10):
+def twin_ddd_train(n_episodes=3600, save_every=10):
     scores_deque = deque(maxlen=100)
     scores_array = []
     avg_scores_array = []
 
     time_start = time.time()  # Init start time
-    replay_buf = ReplayBuffer()  # Init ReplayBuffer
+    replay_buf = ReplayBuffer(rng)  # Init ReplayBuffer
 
     timestep_after_last_save = 0
     total_timesteps = 0
@@ -53,10 +40,11 @@ def twin_ddd_train(n_episodes=2000, save_every=10):
         total_reward = 0
 
         # Reset environment
-        state = env.reset()
+        state = env.reset(seed=seed)
         done = False
 
         while True:
+
 
             # Select action randomly or according to policy
             if total_timesteps < start_timestep:
@@ -83,6 +71,7 @@ def twin_ddd_train(n_episodes=2000, save_every=10):
             if done:  # done ?
                 break  # save score
 
+
         scores_deque.append(total_reward)
         scores_array.append(total_reward)
 
@@ -92,7 +81,7 @@ def twin_ddd_train(n_episodes=2000, save_every=10):
         # train_by_episode(time_start, i_episode)
         s = (int)(time.time() - time_start)
         print('Ep. {}, Timestep {},  Ep.Timesteps {}, Score: {:.2f}, Avg.Score: {:.2f}, Time: {:02}:{:02}:{:02} ' \
-              .format(i_episode, total_timesteps, timestep, \
+              .format(i_episode, total_timesteps, timestep,
                       total_reward, avg_score, s // 3600, s % 3600 // 60, s % 60))
 
         agent.train(replay_buf, timestep)
@@ -100,7 +89,7 @@ def twin_ddd_train(n_episodes=2000, save_every=10):
         # Save episode if more than save_every=5000 timesteps
         if timestep_after_last_save >= save_every:
             timestep_after_last_save %= save_every
-            save(agent, 'checkpnt_seed_88', 'dir_chk')
+            save(agent, 'checkpnt_seed_88', 'Models/exp')
 
         if len(scores_deque) == 100 and np.mean(scores_deque) >= 300.5:
             print('Environment solved with Average Score: ', np.mean(scores_deque))
@@ -109,32 +98,14 @@ def twin_ddd_train(n_episodes=2000, save_every=10):
     return scores_array, avg_scores_array
 
 
-scores, avg_scores = twin_ddd_train()
-save(agent, 'chpnt_88seed_300-5sc_9h44m', 'dir_chk')
-import matplotlib.pyplot as plt
-
-print('length of scores: ', len(scores), ', len of avg_scores: ', len(avg_scores))
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.plot(np.arange(1, len(scores)+1), scores, label="Score")
-plt.plot(np.arange(1, len(avg_scores)+1), avg_scores, label="Avg on 100 episodes")
-plt.legend(bbox_to_anchor=(1.05, 1))
-plt.ylabel('Score')
-plt.xlabel('Episodes #')
-plt.show()
-from collections import deque
-import os
-
-
 def play(env, agent, n_episodes):
-    state = env.reset()
+    state = env.reset(seed=seed)
 
     scores_deque = deque(maxlen=100)
     scores = []
 
     for i_episode in range(1, n_episodes + 1):
-        state = env.reset()
+        state = env.reset(seed=seed)
         score = 0
 
         time_start = time.time()
@@ -155,6 +126,36 @@ def play(env, agent, n_episodes):
 
         print('Episode {}\tAverage Score: {:.2f},\tScore: {:.2f} \tTime: {:02}:{:02}:{:02}' \
               .format(i_episode, np.mean(scores_deque), score, s // 3600, s % 3600 // 60, s % 60))
+
+std_noise=0.1
+
+env = gym.make()#'BipedalWalkerHardcore-v3'/BipedalWalker-v3
+# Set seeds
+seed = 2022
+env.action_space.np_random.seed(seed)
+# random.seed(seed)
+torch.manual_seed(seed)
+rng = np.random.default_rng(seed)
+state = env.reset(seed=seed)
+state_dim = env.observation_space.shape[0]
+action_dim = env.action_space.shape[0]
+max_action = float(env.action_space.high[0])
+agent = TD3(state_dim, action_dim, max_action)
+
+scores, avg_scores = twin_ddd_train()
+save(agent, 'chpnt_2022_seed', 'hard_bipedal')
+import matplotlib.pyplot as plt
+
+print('length of scores: ', len(scores), ', len of avg_scores: ', len(avg_scores))
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+plt.plot(np.arange(1, len(scores)+1), scores, label="Score")
+plt.plot(np.arange(1, len(avg_scores)+1), avg_scores, label="Avg on 100 episodes")
+plt.legend(bbox_to_anchor=(1.05, 1))
+plt.ylabel('Score')
+plt.xlabel('Episodes #')
+plt.show()
 
 
 play(env=env, agent=agent, n_episodes=7)

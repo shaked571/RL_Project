@@ -75,10 +75,11 @@ class Critic(nn.Module):
 
 # Expects tuples of (state, next_state, action, reward, done)
 class ReplayBuffer(object):
-    def __init__(self, max_size=1e6):
+    def __init__(self,gtr, max_size=1e6):
         self.storage = []
         self.max_size = max_size
         self.ptr = 0
+        self.gtr= gtr
 
     def add(self, data):
         if len(self.storage) == self.max_size:
@@ -88,7 +89,7 @@ class ReplayBuffer(object):
             self.storage.append(data)
 
     def sample(self, batch_size):
-        ind = np.random.randint(0, len(self.storage), size=batch_size)
+        ind = self.gtr.integers(low=0, high=len(self.storage), size=batch_size)
         x, y, u, r, d = [], [], [], [], []
 
         for i in ind:
@@ -120,21 +121,22 @@ class TD3(object):
         state = torch.FloatTensor(state.reshape(1, -1)).to(device)
         return self.actor(state).cpu().data.numpy().flatten()
 
-    def train(self, replay_buffer, iterations, batch_size=100, discount=0.99, \
+    def train(self, replay_buffer, iterations, batch_size=100, discount=0.99,
               tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
 
         for it in range(iterations):
 
             # Sample replay buffer
-            x, y, u, r, d = replay_buffer.sample(batch_size)
-            state = torch.FloatTensor(x).to(device)
-            action = torch.FloatTensor(u).to(device)
-            next_state = torch.FloatTensor(y).to(device)
-            done = torch.FloatTensor(1 - d).to(device)
-            reward = torch.FloatTensor(r).to(device)
+            state, next_state, action, reward, done = replay_buffer.sample(batch_size)
+            original_action = action.copy()
+            state = torch.FloatTensor(state).to(device)
+            action = torch.FloatTensor(action).to(device)
+            next_state = torch.FloatTensor(next_state).to(device)
+            done = torch.FloatTensor(1 - done).to(device)
+            reward = torch.FloatTensor(reward).to(device)
 
             # Select action according to policy and add clipped noise
-            noise = torch.FloatTensor(u).data.normal_(0, policy_noise).to(device)
+            noise = torch.FloatTensor(original_action).data.normal_(0, policy_noise).to(device)
             noise = noise.clamp(-noise_clip, noise_clip)
             next_action = (self.actor_target(next_state) + noise).clamp(-self.max_action, self.max_action)
 

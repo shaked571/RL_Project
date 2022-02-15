@@ -9,14 +9,12 @@ from models import Actor, Critic
 import numpy as np
 import gym
 from buffer import ReplayBuffer
-seed=42
-torch.manual_seed(seed)
 from torch.optim.lr_scheduler import LambdaLR
 BATCH_SIZE = 64
 LEARNING_RATE = 0.0012
 GAMMA = 0.99
 TAU = 0.001
-MAX_REPLAY_BUFFER = 1000000
+MAX_REPLAY_BUFFER = 100000
 
 
 class ActorCritic(Algo):
@@ -25,7 +23,7 @@ class ActorCritic(Algo):
 		"""
 		:param replay_buffer: replay memory buffer object
 		"""
-		super().__init__(env)
+		super().__init__(env, 'actor_critic')
 		self.state_dim = env.observation_space.shape[0]
 		self.action_dim = env.action_space.shape[0]
 		self.action_lim = env.action_space.high[0]
@@ -37,8 +35,8 @@ class ActorCritic(Algo):
 		self.device = device
 		self.replay_buffer = replay_buffer
 		self.iter = 0
-		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim)
 
+		self.noise = utils.OrnsteinUhlenbeckActionNoise(self.action_dim, theta=0.005, sigma=0.005)
 		self.noise_clamp = self.action_lim
 		self.actor = Actor(self.state_dim, self.action_dim, self.action_lim).to(device)
 		self.target_actor = Actor(self.state_dim, self.action_dim, self.action_lim).to(device)
@@ -78,12 +76,13 @@ class ActorCritic(Algo):
 		action = self.actor(state).detach()
 		noise = self.noise.sample() * self.action_lim
 		noise = noise.clamp(-self.action_lim, self.action_lim)
-		print(f"noise: {noise}")
-		new_action = action.data.cpu() + noise
-		print(f"new_action: {action}")
-		print(f"new with noise : {new_action}")
+		# print(f"noise: {noise}")
+		new_action = action.data.cpu() #+ noise
+		# print(f"new_action: {action}")
+		# print(f"new with noise : {new_action}")
 		new_action = new_action.clamp(-self.action_lim, self.action_lim)
-		print(f"new_action_clamp: {new_action}")
+		# print(f"new_action_clamp: {new_action}")
+		# self.noise_clamp *= 0.999
 		return new_action.numpy()
 
 	def optimize(self):
@@ -176,14 +175,21 @@ class ActorCritic(Algo):
 
 	def plot_episode(self, ep_score, i, **kwargs):
 		super(ActorCritic, self).plot_episode(ep_score, i)
+		print(f"current reward: {ep_score}")
+
 		print(f"actor lr: {self.actor_optimizer.param_groups[0]['lr']}")
 		print(f"critic lr: {self.critic_optimizer.param_groups[0]['lr']}")
 
 
 def main():
+	seed = 2022
+	env = gym.make("LunarLanderContinuous-v2")
+	env.action_space.np_random.seed(seed)
+	# random.seed(seed)
+	torch.manual_seed(seed)
+	rng = np.random.default_rng(seed)
 	device = "cuda" if torch.cuda.is_available() else "cpu"
-	env = gym.make("MountainCarContinuous-v0")
-	ram = ReplayBuffer(MAX_REPLAY_BUFFER, device)
+	ram = ReplayBuffer(MAX_REPLAY_BUFFER, device, rng)
 	algo = ActorCritic(ram, env, device)
 	algo.run_all_episodes()
 

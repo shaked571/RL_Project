@@ -36,7 +36,7 @@ class Qlearning(Algo):
     ALWAYS_DISCRETE_VALUES = {8, 13}
 
     def __init__(self, env, discrete_size):
-        super().__init__(env)
+        super().__init__(env, "qlearning")
         self.discrete_size = discrete_size
         self.q_table = defaultdict(lambda: np.zeros((discrete_size, discrete_size, discrete_size, discrete_size)))
         self.state_bins = [np.linspace(min_val, max_val, self.discrete_size) for min_val, max_val in self.state_bounds]
