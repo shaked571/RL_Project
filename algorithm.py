@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 import datetime
 import pandas as pd
 
+
 class Algo:
     EPISODES = 3000
 
     def __init__(self, env, name):
+        self.name = name
         self.max_steps = 1000
         self.max_steps = env._max_episode_steps
         self.now_str = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
@@ -24,7 +26,6 @@ class Algo:
         self.x_label_title = "Episode #"
         self.DEBUG = False
         self.high_score = -200
-        self.name = name
 
     def run_all_episodes(self):
         for i in range(1, self.EPISODES + 1):
