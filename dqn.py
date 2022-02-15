@@ -47,7 +47,7 @@ class DQN(Algo):
             action = np.random.choice(actions)
             return action
         else:
-            state = np.array([observation])
+            state = torch.tensor([observation], dtype=torch.float)
             actions = self.Q_net(state)
             action = torch.argmax(actions, dim=1).numpy()[0]
             return action
@@ -65,10 +65,8 @@ class DQN(Algo):
             total_reward += reward
             self.buffer.add(state, action, reward, next_state, done)
             state = next_state
-
             if self.buffer.len < self.batch_size:
                 continue
-
             if self.step_counter % self.update_rate == 0:
                 hard_update(self.Q_target, self.Q_net)
 
@@ -76,14 +74,15 @@ class DQN(Algo):
 
             # step
             q_predicted = self.Q_net(state_batch)
-            q_next = self.Q_target(new_state_batch).detach().max(1)[0].unsqueeze(1)
+            q_predicted = q_predicted.gather(1, action_batch.unsqueeze(1).type(torch.int64) )
+            q_next = self.Q_target(new_state_batch).detach()
             # q_max_next = torch.max(q_next, dim=1).values.detach().numpy()
             # q_target = np.copy(q_predicted.detach())
 
             # Get max predicted Q values (for next states) from target model
             # Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
             # Compute Q targets for current states
-            q_target = reward_batch + (self.discount_factor * q_next * (1 - done_batch))
+            q_target = reward_batch + self.discount_factor * q_next.max(1)[0] * (1 - done_batch)
 
             # for idx in range(done_batch.shape[0]):
             #     q_predicted[idx, int(action_batch[idx])] = reward_batch[idx] + self.discount_factor * q_max_next[idx] * (1 - int(done_batch[idx]))
@@ -92,12 +91,14 @@ class DQN(Algo):
             self.optimizer.zero_grad()
             self.Q_net.zero_grad()
             # output = self.Q_net(state_batch)
-            out_loss = self.loss(q_target, q_predicted)
+            out_loss = self.loss(q_predicted, q_target.unsqueeze(1))
             out_loss.backward()
             self.optimizer.step()
 
             self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
             self.step_counter += 1
+            if done:
+                break
 
         return total_reward
 
