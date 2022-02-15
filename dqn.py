@@ -104,7 +104,7 @@ class DQN(Algo):
 
 
 def main():
-    seed = 2022
+    seed = 42
 
     # action_space = generate_action_spaces([0,0.3, 0.6, 0.9], [0, 0.6, -0.6, 0.9, -0.9])
     action_space = {i: v for i, v in enumerate(itertools.product([0, 0.3, 0.6, 0.9], [0, 0.6, -0.6, 0.9, -0.9]))}
