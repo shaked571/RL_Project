@@ -36,8 +36,8 @@ class DQN(Algo):
 
         self.state_dim = env.observation_space.shape[0]
 
-        self.Q_net = DQNModel(state_dim=self.state_dim, action_dim=self.num_actions, hidden_dim=256)
-        self.Q_target = DQNModel(state_dim=self.state_dim, action_dim=self.num_actions, hidden_dim=256)
+        self.Q_net = DQNModel(state_dim=self.state_dim, action_dim=self.num_actions, hidden_dim=256).to(self.device)
+        self.Q_target = DQNModel(state_dim=self.state_dim, action_dim=self.num_actions, hidden_dim=256).to(self.device)
         self.optimizer = torch.optim.AdamW(self.Q_net.parameters(), self.lr)
         self.loss = torch.nn.HuberLoss()
 
@@ -47,8 +47,8 @@ class DQN(Algo):
             action = np.random.choice(actions)
             return action
         else:
-            state = torch.tensor([observation], dtype=torch.float)
-            actions = self.Q_net(state)
+            state = torch.tensor([observation], dtype=torch.float).to(self.device)
+            actions = self.Q_net(state).detach()
             action = torch.argmax(actions, dim=1).numpy()[0]
             return action
 
@@ -73,8 +73,10 @@ class DQN(Algo):
             state_batch, action_batch, reward_batch, new_state_batch, done_batch = self.buffer.sample(self.batch_size)
 
             # step
-            q_predicted = self.Q_net(state_batch)
-            q_predicted = q_predicted.gather(1, action_batch.unsqueeze(1).type(torch.int64) )
+            state_batch = state_batch.to(self.device)
+            new_state_batch = new_state_batch.to(self.device)
+            q_predicted = self.Q_net(state_batch).detach()
+            q_predicted = q_predicted.gather(1, action_batch.unsqueeze(1).type(torch.int64))
             q_next = self.Q_target(new_state_batch).detach()
             q_target = reward_batch + self.discount_factor * q_next.max(1)[0] * (1 - done_batch)
 

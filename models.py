@@ -111,16 +111,13 @@ class DQNModel(nn.Module):
 
 		self.fc1 = nn.Linear(state_dim, self.hidden_dim)
 		self.fc2 = nn.Linear(self.hidden_dim, int(self.hidden_dim/2))
-
-		# self.fc3 = nn.Linear(int(self.hidden_dim/2), action_dim)
-		self.fc4 = nn.Linear(int(self.hidden_dim/2), action_dim)
+		self.fc3 = nn.Linear(int(self.hidden_dim / 2), action_dim)
 
 		self.leaky_relu = nn.LeakyReLU(0.1)
 
 		nn.init.xavier_uniform_(self.fc1.weight)
 		nn.init.xavier_uniform_(self.fc2.weight)
-		# nn.init.xavier_uniform_(self.fc3.weight)
-		nn.init.xavier_uniform_(self.fc4.weight)
+		nn.init.xavier_uniform_(self.fc3.weight)
 
 	def forward(self, state):
 		"""
@@ -133,8 +130,7 @@ class DQNModel(nn.Module):
 		"""
 		x = self.leaky_relu(self.fc1(state))
 		x = self.leaky_relu(self.fc2(x))
-		# x = self.leaky_relu(self.fc3(x))
-		action = self.fc4(x)
+		action = self.fc3(x)
 
 		return action
 
