@@ -77,6 +77,7 @@ class DQN(Algo):
     def run_algo_step(self, i):
         print(f'EPISODE: {i}')
         state = self.env.reset()
+        state = self.update_state_for_velocity(state)
         total_reward = 0
 
         for _ in range(self.max_steps):
@@ -118,7 +119,7 @@ class DQN(Algo):
         return total_reward
 
 
-def main():
+def main(velocity=None):
     seed = 42
 
     action_space = {i: v for i, v in enumerate(itertools.product([0, 0.3, 0.6, 0.9], [0, 0.6, -0.6, 0.9, -0.9]))}
@@ -129,7 +130,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     noise = OrnsteinUhlenbeckActionNoise(action_dim=1, rng=rng, theta=0.005, sigma=0.005)
     buffer = ReplayBuffer(MAX_REPLAY_BUFFER, device, rng)
-    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False, velocity=None)
+    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False, velocity=velocity)
     algo.run_all_episodes()
 
 
