@@ -22,7 +22,7 @@ class Algo:
         plt.title("Scores vs Episode")
         self.plot_line, = self.sub_plot.plot(self.xval, self.yval)
         self.sub_plot.set_xlim([0, self.EPISODES])
-        self.sub_plot.set_ylim([-220, 240])
+        self.sub_plot.set_ylim([-220, 280])
         self.x_label_title = "Episode #"
         self.DEBUG = False
         self.high_score = -200
