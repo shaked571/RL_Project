@@ -7,6 +7,8 @@ from algorithm import Algo
 from buffer import ReplayBuffer
 from models import DQNModel
 from utils import OrnsteinUhlenbeckActionNoise, hard_update
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 MAX_REPLAY_BUFFER = 100000
 
@@ -129,7 +131,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     noise = OrnsteinUhlenbeckActionNoise(action_dim=1, rng=rng, theta=0.005, sigma=0.005)
     buffer = ReplayBuffer(MAX_REPLAY_BUFFER, device, rng)
-    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False, velocity=None)
+    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False, velocity="avg")
     algo.run_all_episodes()
 
 
