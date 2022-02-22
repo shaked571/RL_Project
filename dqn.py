@@ -14,7 +14,7 @@ MAX_REPLAY_BUFFER = 100000
 class DQN(Algo):
 
     def __init__(self,   env, action_space: dict, buffer, device, noise, apply_noise, discount_factor=0.99, update_rate=50, batch_size=64,
-                 lr=0.001, epsilon=1, eps_end=0.01, eps_dec=5e-4, max_steps=1000):
+                 lr=0.001, epsilon=1, eps_end=0.01, eps_dec=5e-4, max_steps=1000, velocity=None):
         super().__init__(env, 'dqn')
         self.epsilon = epsilon
         self.eps_min = eps_end
@@ -30,11 +30,15 @@ class DQN(Algo):
         self.max_steps = max_steps
         self.noise = noise
         self.apply_noise = apply_noise
+        self.velocity = velocity
 
         self.step_counter = 0
         self.scores = []
 
-        self.state_dim = env.observation_space.shape[0]
+        if self.velocity:
+            self.state_dim = env.observation_space.shape[0] - 1
+        else:
+            self.state_dim = env.observation_space.shape[0]
 
         self.Q_net = DQNModel(state_dim=self.state_dim, action_dim=self.num_actions, hidden_dim=256).to(self.device)
         self.Q_target = DQNModel(state_dim=self.state_dim, action_dim=self.num_actions, hidden_dim=256).to(self.device)
@@ -52,6 +56,24 @@ class DQN(Algo):
             action = torch.argmax(actions, dim=1).cpu().data.numpy()[0]
             return action
 
+    def update_state_for_velocity(self, state):
+        velocity_x = state[2]
+        velocity_y = state[3]
+
+        if self.velocity == "diff":
+            new_velocity = velocity_x - velocity_y
+            state = np.concatenate((state[:2], [new_velocity], state[4:]), axis=0)
+
+        if self.velocity == "concat":
+            new_velocity = velocity_x + velocity_y
+            state = np.concatenate((state[:2], [new_velocity], state[4:]), axis=0)
+
+        if self.velocity == "avg":
+            new_velocity = (velocity_x + velocity_y)/2
+            state = np.concatenate((state[:2], [new_velocity], state[4:]), axis=0)
+
+        return state
+
     def run_algo_step(self, i):
         print(f'EPISODE: {i}')
         state = self.env.reset()
@@ -62,6 +84,7 @@ class DQN(Algo):
             action = self.policy(state)
             next_state, reward, done, _ = self.env.step(self.action_space[action])
             next_state = state + self.noise.sample().numpy() if self.apply_noise else next_state
+            next_state = self.update_state_for_velocity(next_state)
             total_reward += reward
             self.buffer.add(state, action, reward, next_state, done)
             state = next_state
@@ -106,8 +129,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     noise = OrnsteinUhlenbeckActionNoise(action_dim=1, rng=rng, theta=0.005, sigma=0.005)
     buffer = ReplayBuffer(MAX_REPLAY_BUFFER, device, rng)
-
-    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False)
+    algo = DQN(env, action_space, buffer, device, noise, apply_noise=False, velocity=None)
     algo.run_all_episodes()
 
 
