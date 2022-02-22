@@ -75,7 +75,7 @@ class DQN(Algo):
             # step
             state_batch = state_batch.to(self.device)
             new_state_batch = new_state_batch.to(self.device)
-            q_predicted = self.Q_net(state_batch).detach()
+            q_predicted = self.Q_net(state_batch)
             q_predicted = q_predicted.gather(1, action_batch.unsqueeze(1).type(torch.int64))
             q_next = self.Q_target(new_state_batch).detach()
             q_target = reward_batch + self.discount_factor * q_next.max(1)[0] * (1 - done_batch)
