@@ -1,51 +1,37 @@
 import numpy as np
 import random
-import math
 import gym
 from collections import defaultdict
 from algorithm import Algo
 
 
 class Qlearning(Algo):
-    state_bounds = [(-1, math.pi),  # 0 hull_angle
-                    (-0.25, 0.25),  # 1 hull_angularVelocity
-                    (-1, 1),  # 2 vel_x
-                    (-1, 1),  # 3 vel_y
-                    (-0.5, 0.5),  # 4 hip_joint_1_angle
-                    (-2.5, 2.5),  # 5 hip_joint_1_speed
-                    (-0.5, 1.5),  # 6 knee_joint_1_angle
-                    (-3, 3),  # 7 knee_joint_1_speed
-                    (0, 1),  # 8 leg_1_ground_contact_flag
-                    (-0.8, 1),  # 9 hip_joint_2_angle
-                    (-2, 2),  # 10 hip_joint_2_speed
-                    (-1, 0.5),  # 11 knee_joint_2_angle
-                    (-3, 3),  # 12 knee_joint_2_speed
-                    (0, 1),  # 13 leg_2_ground_contact_flag
-                    (0, 1),  # lidar 1
-                    (0, 1),  # lidar 2
-                    (0, 1),  # lidar 3
-                    (0, 1),  # lidar 4
-                    (0, 1),  # lidar 5
-                    (0, 1),  # lidar 6
-                    (0, 1),  # lidar 7
-                    (0, 1),  # lidar 8
-                    (0, 1),  # lidar 9
-                    (0, 1)  # lidar 10
+    state_bounds = [
+                    (-1, 1),  # position X
+                    (-1, 1),  # position Y
+                    (-1, 1),  # velocity X
+                    (-1, 1),  # velocity Y
+                    (-1, 1),  # angel
+                    (-1, 1),  # angular velocity
+                    (0, 1),  # left leg touch ground
+                    (0, 1)  # right leg touch ground
                     ]
 
-    ALWAYS_DISCRETE_VALUES = {8, 13}
+    ALWAYS_DISCRETE_VALUES = {6, 7}
 
-    def __init__(self, env, discrete_size):
+    def __init__(self, env, discrete_size_state, discrete_size_action):
         super().__init__(env, "qlearning")
-        self.discrete_size = discrete_size
-        self.q_table = defaultdict(lambda: np.zeros((discrete_size, discrete_size, discrete_size, discrete_size)))
-        self.state_bins = [np.linspace(min_val, max_val, self.discrete_size) for min_val, max_val in self.state_bounds]
-        self.action_bin = np.linspace(-1, 1, self.discrete_size)
+        self.discrete_size_state = discrete_size_state
+        self.discrete_size_action = discrete_size_action
+        self.action_size = self.env.action_space.shape[0]
+        self.q_table = defaultdict(lambda: np.zeros(tuple([self.discrete_size_action]*self.action_size)))
+        self.state_bins = [np.linspace(min_val, max_val, self.discrete_size_state) for min_val, max_val in self.state_bounds]
+        self.action_bin = np.linspace(-1, 1, self.discrete_size_action)
         self.GAMMA = 0.99
         self.ALPHA = 0.01
         self.INF = 1000
         self.epsilon = 0.5
-        self.all_states = np.array([0] * 24)
+        self.all_states = np.array([0] * len(self.state_bounds))
 
     def update_q_table(self, state, action, reward, nextState=None):
 
@@ -108,8 +94,8 @@ class Qlearning(Algo):
     def get_next_disc_action(self, state):
         if np.random.random() < self.epsilon:
             action = ()
-            for i in range(0, 4):
-                action += (random.randint(0, self.discrete_size - 1),)
+            for i in range(0, self.action_size):
+                action += (random.randint(0, self.discrete_size_action - 1),)
         else:
             action = np.unravel_index(np.argmax(self.q_table[state]), self.q_table[state].shape)
 
@@ -120,8 +106,8 @@ class Qlearning(Algo):
 
 
 def main():
-    env = gym.make("BipedalWalker-v3")
-    algo = Qlearning(env, 10)
+    env = gym.make("LunarLanderContinuous-v2")
+    algo = Qlearning(env, 10, 5)
     algo.run_all_episodes()
 
 
