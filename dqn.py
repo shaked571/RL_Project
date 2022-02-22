@@ -49,7 +49,7 @@ class DQN(Algo):
         else:
             state = torch.tensor([observation], dtype=torch.float).to(self.device)
             actions = self.Q_net(state).detach()
-            action = torch.argmax(actions, dim=1).numpy()[0]
+            action = torch.argmax(actions, dim=1).cpu().data.numpy()[0]
             return action
 
     def run_algo_step(self, i):
