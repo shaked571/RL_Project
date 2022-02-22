@@ -31,7 +31,10 @@ class Algo:
         for i in range(1, self.EPISODES + 1):
             ep_score = self.run_algo_step(i)
             print("Episode finished. Now plotting..")
-            self.plot_episode(ep_score, i)
+            avg_last_100 = self.plot_episode(ep_score, i)
+            if avg_last_100 > 200:
+                print(f"Finished in the {i} episode with score {avg_last_100}")
+                break
 
     def plot_episode(self, ep_score, i):
         self.xval.append(i)
@@ -39,10 +42,13 @@ class Algo:
         self.plot_line.set_xdata(self.xval)
         self.plot_line.set_ydata(self.yval)
         moving_avg = pd.Series(self.yval, index=self.xval).rolling(100, min_periods=1).mean()
-        print(f"current avg over last 100: {moving_avg.iloc[len(moving_avg) - 1]}")
+        avg_last_100 = moving_avg.iloc[len(moving_avg) - 1]
+        print(f"current avg over last 100: {avg_last_100}")
+        if avg_last_100 > 200:
+            self.sub_plot.set_xlim([0, i+1])
         self.sub_plot.plot(self.xval, moving_avg, "--k")
-
         self.score_graph.savefig(f"./plots/{self.name}/{self.now_str}/score_graph.png")
+        return avg_last_100
 
     def wrap_env(self, env):
         env = Monitor(env, f'./plots/{self.name}/{self.now_str}/video', video_callable=lambda episode_id: episode_id % 50 == 0,

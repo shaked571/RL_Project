@@ -24,7 +24,9 @@ class Qlearning(Algo):
     def __init__(self, env, discrete_size_state, discrete_size_action):
         super().__init__(env, "qlearning")
         self.discrete_size_state = discrete_size_state
+        print(f"discrete_size_state: {discrete_size_state}")
         self.discrete_size_action = discrete_size_action
+        print(f"discrete_size_action: {discrete_size_action}")
         self.action_size = self.env.action_space.shape[0]
         self.q_table = defaultdict(lambda: np.zeros((self.DIM_X, self.DIM_Y)))
         self.state_bins = [np.linspace(min_val, max_val, self.discrete_size_state) for min_val, max_val in self.state_bounds]
@@ -87,6 +89,7 @@ class Qlearning(Algo):
             if i in self.ALWAYS_DISCRETE_VALUES:
                 discrete_stats.append(state)
             else:
+                # state = 0.99 if state > 0.99 else state
                 dis_state = np.digitize(state, self.state_bins[i])
                 discrete_stats.append(dis_state)
         return tuple(discrete_stats)
@@ -112,7 +115,7 @@ class Qlearning(Algo):
 
 def main():
     env = gym.make("LunarLanderContinuous-v2")
-    algo = Qlearning(env, 10, 5)
+    algo = Qlearning(env, 15, 5)
     algo.run_all_episodes()
 
 
