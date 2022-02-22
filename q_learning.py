@@ -18,15 +18,17 @@ class Qlearning(Algo):
                     ]
 
     ALWAYS_DISCRETE_VALUES = {6, 7}
+    DIM_X = 4
+    DIM_Y = 5
 
     def __init__(self, env, discrete_size_state, discrete_size_action):
         super().__init__(env, "qlearning")
         self.discrete_size_state = discrete_size_state
         self.discrete_size_action = discrete_size_action
         self.action_size = self.env.action_space.shape[0]
-        self.q_table = defaultdict(lambda: np.zeros(tuple([self.discrete_size_action]*self.action_size)))
+        self.q_table = defaultdict(lambda: np.zeros((self.DIM_X, self.DIM_Y)))
         self.state_bins = [np.linspace(min_val, max_val, self.discrete_size_state) for min_val, max_val in self.state_bounds]
-        self.action_bin = np.linspace(-1, 1, self.discrete_size_action)
+        self.action_bin = self.create_action_bin()
         self.GAMMA = 0.99
         self.ALPHA = 0.01
         self.INF = 1000
@@ -34,7 +36,6 @@ class Qlearning(Algo):
         self.all_states = np.array([0] * len(self.state_bounds))
 
     def update_q_table(self, state, action, reward, nextState=None):
-
         current = self.q_table[state][action]
         qNext = np.max(self.q_table[nextState]) if nextState is not None else 0
         target = reward + (self.GAMMA * qNext)
@@ -45,7 +46,6 @@ class Qlearning(Algo):
         return max(self.epsilon * 0.99, 0.1)
 
     def run_algo_step(self, i):
-
         print("Episode #: ", i)
         env_state = self.env.reset()
         state = self.discretize_state(env_state)
@@ -93,16 +93,21 @@ class Qlearning(Algo):
 
     def get_next_disc_action(self, state):
         if np.random.random() < self.epsilon:
-            action = ()
-            for i in range(0, self.action_size):
-                action += (random.randint(0, self.discrete_size_action - 1),)
+            action = (random.randint(0, self.DIM_X - 1), random.randint(0, self.DIM_Y - 1))
         else:
             action = np.unravel_index(np.argmax(self.q_table[state]), self.q_table[state].shape)
 
         return action
 
     def convert_2_action(self, next_discrete_action):
-        return tuple([self.action_bin[a] for a in next_discrete_action])
+        return self.action_bin[next_discrete_action]
+
+    def create_action_bin(self):
+        action_bin = {}
+        for i, x in enumerate([0, 0.3, 0.6, 0.9]):
+            for j, y in enumerate([0, 0.6, -0.6, 0.9, -0.9]):
+                action_bin[(i, j)] = (x, y)
+        return action_bin
 
 
 def main():
