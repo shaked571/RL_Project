@@ -76,21 +76,11 @@ class DQN(Algo):
             q_predicted = self.Q_net(state_batch)
             q_predicted = q_predicted.gather(1, action_batch.unsqueeze(1).type(torch.int64) )
             q_next = self.Q_target(new_state_batch).detach()
-            # q_max_next = torch.max(q_next, dim=1).values.detach().numpy()
-            # q_target = np.copy(q_predicted.detach())
-
-            # Get max predicted Q values (for next states) from target model
-            # Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
-            # Compute Q targets for current states
             q_target = reward_batch + self.discount_factor * q_next.max(1)[0] * (1 - done_batch)
-
-            # for idx in range(done_batch.shape[0]):
-            #     q_predicted[idx, int(action_batch[idx])] = reward_batch[idx] + self.discount_factor * q_max_next[idx] * (1 - int(done_batch[idx]))
 
             # train
             self.optimizer.zero_grad()
             self.Q_net.zero_grad()
-            # output = self.Q_net(state_batch)
             out_loss = self.loss(q_predicted, q_target.unsqueeze(1))
             out_loss.backward()
             self.optimizer.step()
@@ -106,12 +96,9 @@ class DQN(Algo):
 def main():
     seed = 42
 
-    # action_space = generate_action_spaces([0,0.3, 0.6, 0.9], [0, 0.6, -0.6, 0.9, -0.9])
     action_space = {i: v for i, v in enumerate(itertools.product([0, 0.3, 0.6, 0.9], [0, 0.6, -0.6, 0.9, -0.9]))}
-
     env = gym.make("LunarLanderContinuous-v2")
     env.action_space.np_random.seed(seed)
-    # random.seed(seed)
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
