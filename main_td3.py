@@ -85,7 +85,7 @@ def twin_ddd_train(agent, env, rng, action_dim, n_episodes=3600, save_every=10):
         # Save episode if more than save_every=5000 timesteps
         if timestep_after_last_save >= save_every:
             timestep_after_last_save %= save_every
-            save(agent, 'checkpnt_seed_88', 'Models/exp')
+            save(agent, 'checkpnt_seed_88', 'Models')
 
         if len(scores_deque) == 100 and np.mean(scores_deque) >= 300.5:
             print('Environment solved with Average Score: ', np.mean(scores_deque))
@@ -124,8 +124,8 @@ def play(env, agent, n_episodes):
               .format(i_episode, np.mean(scores_deque), score, s // 3600, s % 3600 // 60, s % 60))
 
 
-def main():
-    env = gym.make('BipedalWalkerHardcore-v3')#'BipedalWalkerHardcore-v3'/BipedalWalker-v3
+def main(task_name):
+    env = gym.make(task_name)#'BipedalWalkerHardcore-v3'/BipedalWalker-v3
     # Set seeds
     seed = 2022
     env.action_space.np_random.seed(seed)
