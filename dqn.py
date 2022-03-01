@@ -10,6 +10,9 @@ from utils import OrnsteinUhlenbeckActionNoise, hard_update
 
 MAX_REPLAY_BUFFER = 100000
 
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 
 class DQN(Algo):
 
