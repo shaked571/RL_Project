@@ -16,8 +16,7 @@ def save(agent, filename, directory):
     torch.save(agent.critic_target.state_dict(), '%s/%s_critic_t.pth' % (directory, filename))
 
 
-# Twin Delayed Deep Deterministic (TD3) policy gradient algorithm
-def twin_ddd_train(agent, env, rng, action_dim, n_episodes=3600, save_every=10):
+def td3_train(agent, env, rng, action_dim, n_episodes=3600, save_every=10):
     scores_deque = deque(maxlen=100)
     scores_array = []
     avg_scores_array = []
@@ -137,7 +136,7 @@ def main(task_name):
     max_action = float(env.action_space.high[0])
     agent = TD3(state_dim, action_dim, max_action)
 
-    scores, avg_scores = twin_ddd_train(agent=agent, env=env, rng=rng, action_dim=action_dim)
+    scores, avg_scores = td3_train(agent=agent, env=env, rng=rng, action_dim=action_dim)
     save(agent, 'chpnt_2022_seed', 'hard_bipedal')
     print('length of scores: ', len(scores), ', len of avg_scores: ', len(avg_scores))
 
